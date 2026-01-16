@@ -9,11 +9,10 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardRemove
 
-# ====== ПОЛУЧЕНИЕ ТОКЕНА ======
-# Сначала пробуем получить из переменных окружения (для Render/Railway)
+#ПОЛУЧЕНИЕ ТОКЕНА
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# Если не нашли в окружении, пробуем config.py (для локальной разработки)
+
 if not BOT_TOKEN:
     try:
         from config import BOT_TOKEN as config_token
@@ -21,31 +20,30 @@ if not BOT_TOKEN:
     except ImportError:
         raise ValueError("❌ BOT_TOKEN не найден! Добавьте его в переменные окружения на Render.")
 
-# ====== ИМПОРТЫ ИЗ ПРОЕКТА ======
+#ИМПОРТЫ ИЗ ПРОЕКТА
 from database import Database
 from keyboards import *
 
-# Настройка логирования
+#настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Инициализация бота и БД
+#инициализация бота и БД
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 db = Database("expenses.db")
 
 
-# Состояния для добавления транзакции
+#состояния для добавления транзакции
 class TransactionStates(StatesGroup):
     waiting_for_category = State()
     waiting_for_amount = State()
     waiting_for_comment = State()
 
 
-# ====== ОБРАБОТЧИКИ КОМАНД ======
+#ОБРАБОТЧИКИ КОМАНД
 
-# /start
 @dp.message(Command("start"))
 async def send_welcome(message: types.Message):
     await message.answer(
@@ -60,7 +58,7 @@ async def send_welcome(message: types.Message):
     )
 
 
-# /help
+
 @dp.message(Command("help"))
 async def send_help(message: types.Message):
     await message.answer(
@@ -76,9 +74,9 @@ async def send_help(message: types.Message):
     )
 
 
-# ====== ОБРАБОТЧИКИ КНОПОК ======
+#ОБРАБОТЧИКИ КНОПОК
 
-# Кнопка "➕ Добавить расход"
+#кнопка  Добавить расход
 @dp.message(F.text == "➕ Добавить расход")
 async def add_expense_start(message: types.Message, state: FSMContext):
     await message.answer("Выберите категорию расхода:", reply_markup=expense_categories_kb)
@@ -86,7 +84,7 @@ async def add_expense_start(message: types.Message, state: FSMContext):
     await state.update_data(trans_type="expense")
 
 
-# Кнопка "💰 Добавить доход"
+#кнопка  Добавить доход
 @dp.message(F.text == "💰 Добавить доход")
 async def add_income_start(message: types.Message, state: FSMContext):
     await message.answer("Введите категорию дохода (например: Зарплата, Фриланс):",
@@ -95,16 +93,16 @@ async def add_income_start(message: types.Message, state: FSMContext):
     await state.update_data(trans_type="income")
 
 
-# Назад в главное меню
+#назад в главное меню
 @dp.message(F.text == "↩️ Назад")
 async def back_to_main(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer("Главное меню:", reply_markup=main_kb)
 
 
-# ====== FSM: ДОБАВЛЕНИЕ ТРАНЗАКЦИИ ======
+#FSM: ДОБАВЛЕНИЕ ТРАНЗАКЦИИ
 
-# Шаг 1: Получение категории
+#шаг 1: Получение категории
 @dp.message(TransactionStates.waiting_for_category)
 async def process_category(message: types.Message, state: FSMContext):
     await state.update_data(category=message.text)
@@ -112,7 +110,7 @@ async def process_category(message: types.Message, state: FSMContext):
     await state.set_state(TransactionStates.waiting_for_amount)
 
 
-# Шаг 2: Получение суммы
+#шаг 2: Получение суммы
 @dp.message(TransactionStates.waiting_for_amount)
 async def process_amount(message: types.Message, state: FSMContext):
     try:
@@ -128,14 +126,14 @@ async def process_amount(message: types.Message, state: FSMContext):
     await state.set_state(TransactionStates.waiting_for_comment)
 
 
-# Шаг 3: Получение комментария и сохранение
+#шаг 3: Получение комментария и сохранение
 @dp.message(TransactionStates.waiting_for_comment)
 async def process_comment(message: types.Message, state: FSMContext):
     comment = None if message.text.lower() in ['нет', 'no', 'пропустить', 'skip'] else message.text
 
     data = await state.get_data()
 
-    # Сохраняем в базу данных
+    #сохраняем в базу данных
     db.add_transaction(
         user_id=message.from_user.id,
         trans_type=data['trans_type'],
@@ -144,7 +142,7 @@ async def process_comment(message: types.Message, state: FSMContext):
         comment=comment
     )
 
-    # Формируем сообщение
+    #формируем сообщение
     trans_type_rus = "расход" if data['trans_type'] == 'expense' else "доход"
     response = (
         f"✅ **{trans_type_rus.capitalize()} добавлен!**\n"
@@ -157,15 +155,15 @@ async def process_comment(message: types.Message, state: FSMContext):
     await state.clear()
 
 
-# ====== ОТЧЕТЫ ======
+#ОТЧЕТЫ
 
-# Кнопка "📊 Отчет"
+#кнопка  Отчет
 @dp.message(F.text == "📊 Отчет")
 async def show_report_menu(message: types.Message):
     await message.answer("Выберите период для отчета:", reply_markup=report_period_kb)
 
 
-# Обработка inline-кнопок отчетов
+#обработка inline-кнопок отчетов
 @dp.callback_query(F.data.startswith('report_'))
 async def process_report_callback(callback_query: types.CallbackQuery):
     period_map = {
@@ -182,15 +180,15 @@ async def process_report_callback(callback_query: types.CallbackQuery):
         await callback_query.message.edit_text(f"📭 За {period} операций нет.")
         return
 
-    # Формируем отчет
+    #формируем отчет\
     report_lines = [f"📋 **Отчет за {period}:**\n"]
     total_expense = 0
     total_income = 0
 
-    for trans in transactions[:15]:  # Показываем только последние 15 операций
+    for trans in transactions[:15]:  #показываем только последние 15 операций
         trans_type, category, amount, date, comment = trans
 
-        # Форматируем дату
+        #ворматируем дату
         if isinstance(date, str):
             date_str = date[:10]
         else:
@@ -217,10 +215,10 @@ async def process_report_callback(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-# Кнопка "📈 Статистика"
+#К\кнопка  Статистика
 @dp.message(F.text == "📈 Статистика")
 async def show_statistics(message: types.Message):
-    # Простая статистика
+    #простая статистика
     transactions = db.get_transactions(message.from_user.id, 'month')
 
     if not transactions:
@@ -254,13 +252,13 @@ async def show_statistics(message: types.Message):
     await message.answer("\n".join(response), parse_mode='Markdown')
 
 
-# Кнопка "ℹ️ Помощь"
+#кнопка  Помощь
 @dp.message(F.text == "ℹ️ Помощь")
 async def show_help(message: types.Message):
     await send_help(message)
 
 
-# ====== ЗАПУСК БОТА ======
+#ЗАПУСК БОТА
 
 async def main():
     print("=" * 50)
