@@ -1,4 +1,4 @@
-# Python
+#Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -21,29 +21,29 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
+#Virtual Environment
 .venv/
 venv/
 env/
 
-# Database
+#Database
 *.db
 *.sqlite3
 
-# Environment variables
+#Environment variables
 .env
 config.py
 
-# IDE
+#IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+#OS
 .DS_Store
 Thumbs.db
 
-# Logs
+#Logs
 *.log
 echo "*.lnk" >> .gitignore
