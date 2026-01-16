@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
@@ -8,7 +9,19 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardRemove
 
-from config import BOT_TOKEN
+# ====== ПОЛУЧЕНИЕ ТОКЕНА ======
+# Сначала пробуем получить из переменных окружения (для Render/Railway)
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+
+# Если не нашли в окружении, пробуем config.py (для локальной разработки)
+if not BOT_TOKEN:
+    try:
+        from config import BOT_TOKEN as config_token
+        BOT_TOKEN = config_token
+    except ImportError:
+        raise ValueError("❌ BOT_TOKEN не найден! Добавьте его в переменные окружения на Render.")
+
+# ====== ИМПОРТЫ ИЗ ПРОЕКТА ======
 from database import Database
 from keyboards import *
 
@@ -252,6 +265,9 @@ async def show_help(message: types.Message):
 async def main():
     print("=" * 50)
     print("🤖 FINANCE BOT запущен! (aiogram 3.x)")
+    print(f"🔑 Токен получен: {'✅ Да' if BOT_TOKEN else '❌ Нет'}")
+    if BOT_TOKEN:
+        print(f"📝 Токен (первые 10 символов): {BOT_TOKEN[:10]}...")
     print("📊 База данных: expenses.db")
     print(f"⏰ {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}")
     print("⏳ Ожидание сообщений...")
