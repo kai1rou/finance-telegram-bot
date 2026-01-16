@@ -6,7 +6,7 @@ from aiogram.types import (
     ReplyKeyboardRemove
 )
 
-# Главное меню
+#главное меню
 main_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="➕ Добавить расход"), KeyboardButton(text="💰 Добавить доход")],
@@ -17,7 +17,7 @@ main_kb = ReplyKeyboardMarkup(
     input_field_placeholder="Выберите действие..."
 )
 
-# Категории расходов
+#категории расходов
 expense_categories_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🍔 Еда"), KeyboardButton(text="🚗 Транспорт"), KeyboardButton(text="🏠 Дом")],
@@ -28,7 +28,7 @@ expense_categories_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-# Периоды для отчета
+#периоды для отчета
 report_period_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
