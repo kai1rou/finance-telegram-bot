@@ -23,7 +23,7 @@ class Database:
                     comment TEXT
                 )
             ''')
-            # Создаем индекс для быстрого поиска по пользователю и дате
+            #создаем индекс для быстрого поиска по пользователю и дате
             self.cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_user_date 
                 ON transactions (user_id, date)
